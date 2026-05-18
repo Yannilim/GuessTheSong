@@ -1,122 +1,87 @@
-import { useState } from 'react'
-import reactLogo from '../assets/react.svg'
-import viteLogo from '../assets/vite.svg'
-import heroImg from '../assets/hero.png'
+import { useEffect, useState } from 'react';
+import YouTube, { type YouTubeEvent } from 'react-youtube';
+import { fetchPlaylistTracks, type Track } from './youtubeService';
 import '../scss/App.scss';
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Eine garantiert aktive Playlist (z.B. "NCS Release" - NoCopyrightSounds)
+    const playlistId = 'PL0bMThDkWam_2g-Yl3gA2S5v0C665wWf5';
+    
+    fetchPlaylistTracks(playlistId).then((data) => {
+      if (data.length > 0) {
+        // Wir mischen die Songs einmal durch (Shuffeln), damit es ein echtes Spiel wird
+        setTracks(data.sort(() => Math.random() - 0.5));
+      }
+    });
+  }, []);
+
+  const currentTrack = tracks[currentIndex];
+
+  // Sobald der YouTube-Player bereit ist, starten wir das Audio
+  const onPlayerReady = (event: YouTubeEvent) => {
+    event.target.playVideo();
+    setIsPlaying(true);
+  };
+
+  const nextTrack = () => {
+    if (currentIndex < tracks.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+      setIsPlaying(false);
+    } else {
+      alert('Wahnsinn! Du hast alle Songs durch!');
+    }
+  };
+
+  // Optionen für den YouTube-Player (unsichtbar und ohne Steuerelemente)
+  const playerOptions = {
+    height: '0',
+    width: '0',
+    playerVars: {
+      autoplay: 1,
+      controls: 0, // Versteckt die YouTube-Steuerleiste
+    },
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div id="root">
+      <main className="game-container">
+        <h1>Guess the Song!</h1>
 
-      <div className="ticks"></div>
+        {currentTrack ? (
+          <div className="quiz-section">
+            {/* Das ist unser unsichtbarer Player */}
+            <YouTube 
+              videoId={currentTrack.id} 
+              opts={playerOptions} 
+              onReady={onPlayerReady} 
+            />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+            <div className="status-box">
+              {isPlaying ? (
+                <p className="playing-text">🎵 Song wird im Hintergrund abgespielt... Errate ihn!</p>
+              ) : (
+                <p className="loading-text">Lade nächsten Song...</p>
+              )}
+            </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+            {/* Nur zum Testen blenden wir den echten Namen ein, damit wir sehen, ob es stimmt */}
+            <div className="cheat-sheet">
+              <p><strong>Cheat-Modus (Lösung):</strong> {currentTrack.title}</p>
+            </div>
+
+            <button className="btn-next" onClick={nextTrack}>
+              Nächster Song ➡️
+            </button>
+          </div>
+        ) : (
+          <p>Lade Playlist oder überprüfe deinen API-Key...</p>
+        )}
+      </main>
+    </div>
+  );
 }
-
-export default App
