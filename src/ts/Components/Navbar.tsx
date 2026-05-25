@@ -3,12 +3,6 @@ import { useNavigate } from "react-router-dom";
 import NavItem from "./NavItem";
 import { pb } from "../pb";
 
-interface NavItemProps {
-  to: string;
-  label: string;
-  disabled?: boolean;
-}
-
 const navItems = [
   { to: "/session", label: "Session", alwaysEnabled: true },
   { to: "/songs", label: "Songs", alwaysEnabled: false },
