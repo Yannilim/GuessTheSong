@@ -1,0 +1,78 @@
+// Pages/LoginPage.scss
+@use "../scss/variables" as *;
+
+.login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: $bg-primary;
+
+  &__box {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 320px;
+    background-color: $bg-secondary;
+    padding: 32px;
+    border-radius: $border-radius-lg;
+  }
+
+  &__title {
+    font-size: 24px;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 14px;
+    color: $text-secondary;
+    margin: 0;
+  }
+
+  &__input {
+    background-color: $bg-tertiary;
+    border: 1px solid $border;
+    border-radius: $border-radius;
+    padding: 10px 12px;
+    color: $text-primary;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.15s;
+
+    &::placeholder {
+      color: $text-muted;
+    }
+
+    &:focus {
+      border-color: $accent;
+    }
+  }
+
+  &__button {
+    background-color: $accent;
+    color: white;
+    border: none;
+    border-radius: $border-radius;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s;
+
+    &:hover:not(:disabled) {
+      background-color: $accent-hover;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__error {
+    font-size: 14px;
+    color: $danger;
+  }
+}

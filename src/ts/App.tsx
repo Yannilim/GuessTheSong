@@ -1,3 +1,5 @@
+// App.tsx
+import { useEffect, useState } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -5,18 +7,15 @@ import {
   Navigate,
   Outlet,
 } from "react-router-dom";
-import type { ReactNode } from "react";
-import { useEffect } from "react";
-import { pb } from "./pb";
-
+import { getPlayer } from "./session";
+import { startPresence } from "./presence";
+import Navbar from "./Components/Navbar";
+import LoginPage from "./Pages/LoginPage";
 import LobbyPage from "./Pages/LobbyPage";
 import GamePage from "./Pages/GamePage";
-import LoginPage from "./Pages/LoginPage";
-import Navbar from "./Components/Navbar";
-import "../scss/App.scss";
 
 function PrivateRoute() {
-  if (!pb.authStore.isValid) return <Navigate to="/" />;
+  if (!getPlayer()) return <Navigate to="/" />;
   return (
     <>
       <Navbar />
@@ -26,30 +25,27 @@ function PrivateRoute() {
 }
 
 export default function App() {
+  const [player, setPlayer] = useState(getPlayer());
+
   useEffect(() => {
-    let cancelled = false;
-
-    pb.health
-      .check()
-      .then((result) => {
-        if (!cancelled) console.log("PocketBase verbunden:", result);
-      })
-      .catch((err) => {
-        if (!cancelled) console.error("Verbindung fehlgeschlagen:", err);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    if (player) {
+      const stop = startPresence();
+      return stop;
+    }
+  }, [player]);
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LoginPage />} />
+        <Route
+          path="/"
+          element={<LoginPage onLogin={() => setPlayer(getPlayer())} />}
+        />
         <Route element={<PrivateRoute />}>
-          <Route path="/lobby" element={<LobbyPage />} />
-          <Route path="/session/:id" element={<GamePage />} />
+          <Route path="/session" element={<GamePage />} />
+          <Route path="/songs" element={<LobbyPage />} />
+          <Route path="/upload" element={<LobbyPage />} />
+          <Route path="/settings" element={<LobbyPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
